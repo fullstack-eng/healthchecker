@@ -223,7 +223,7 @@ textarea{resize:vertical;min-height:74px;line-height:1.5}
 </div>
 
 <script>
-const WAVE_ENDPOINT = "";  /* ← paste your Zapier / Fluent Forms submission URL here */
+const WAVE_ENDPOINT = "https://formspree.io/f/mnjrrjdz";  /* Formspree endpoint — sends results to info@waverecruitment.co.uk */
 const WAVE_EMAIL = "info@waverecruitment.co.uk";
 
 const AREA = {
@@ -687,7 +687,6 @@ function sendToWave(){
   const std=[];SECTIONS.forEach(sec=>(sec.stds||[]).forEach(s=>{if(S.std[s.id])std.push(s.label);}));
   const customStd=[];SECTIONS.forEach(sec=>(S.stdCustom[sec.id]||[]).forEach(c=>customStd.push(sec.title+': '+c)));
   const allStd=std.concat(customStd);
-  const qNotes=Object.keys(S.qctx).map(k=>k+': '+S.qctx[k]);
   const lines=['Hiring Health Check · '+S.meta.company,'Completed by: '+S.meta.first];
   if(S.meta.role)lines.push('Last hire: '+S.meta.role);
   if('lh_rate' in S.slider)lines.push('Self-rating: '+S.slider['lh_rate']+'/10');
@@ -695,15 +694,32 @@ function sendToWave(){
   const goals=[...(S.multi['lh_goals']||[]).filter(x=>x!=='Other')];
   if((S.multi['lh_goals']||[]).includes('Other')&&S.text['lh_goals_other'])goals.push(S.text['lh_goals_other']);
   if(goals.length)lines.push('Hoping to tackle: '+goals.join(', '));
-  lines.push('Overall: '+(sc.overall==null?'n/a':sc.overall+'/100'));
-  Object.values(sc.areas).forEach(a=>lines.push('  '+a.name+': '+(a.score==null?'n/a':a.score)));
-  if(std.length)lines.push('Chosen standards: '+std.join('; '));
-  if(S.text['sm_note'])lines.push('Notes: '+S.text['sm_note']);
-  const payload={first_name:S.meta.first,company:S.meta.company,overall:sc.overall,
-    role:S.meta.role||'',self_rating:S.slider['lh_rate'],typical:S.single['lh_typical']||'',
-    goals:goals.join('; '),
-    scores:Object.fromEntries(Object.entries(sc.areas).map(([k,v])=>[k,v.score])),standards:std.join('; '),summary:lines.join('\n')};
-  fetch(WAVE_ENDPOINT,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)})
+  lines.push('');
+  lines.push('Overall score: '+(sc.overall==null?'n/a':sc.overall+'/100'));
+  Object.values(sc.areas).forEach(a=>lines.push('  '+a.name+': '+(a.score==null?'n/a':a.score+'/100')));
+  if(allStd.length){lines.push('');lines.push('Standards set:');allStd.forEach(s=>lines.push('  · '+s));}
+  if(S.text['sm_note']){lines.push('');lines.push('Their note:');lines.push('  "'+S.text['sm_note']+'"');}
+  // Flat payload for Formspree — each field becomes a clean line in the email
+  const payload={
+    _subject:'Hiring Health Check · '+S.meta.company+' ('+(sc.overall==null?'n/a':sc.overall+'/100')+')',
+    Company:S.meta.company,
+    'First name':S.meta.first,
+    'Role last hired for':S.meta.role||'(not given)',
+    'Self-rating (last hire)':('lh_rate' in S.slider)?S.slider['lh_rate']+'/10':'(not given)',
+    'Typical of usual hiring?':S.single['lh_typical']||'(not given)',
+    'What they came to tackle':goals.length?goals.join(', '):'(none picked)',
+    'Overall score':sc.overall==null?'n/a':sc.overall+'/100',
+    'Planning score':sc.areas.planning?.score!=null?sc.areas.planning.score+'/100':'n/a',
+    'Sourcing score':sc.areas.sourcing?.score!=null?sc.areas.sourcing.score+'/100':'n/a',
+    'Screening score':sc.areas.screening?.score!=null?sc.areas.screening.score+'/100':'n/a',
+    'Interview score':sc.areas.interview?.score!=null?sc.areas.interview.score+'/100':'n/a',
+    'Offer score':sc.areas.offer?.score!=null?sc.areas.offer.score+'/100':'n/a',
+    'Metrics score':sc.areas.metrics?.score!=null?sc.areas.metrics.score+'/100':'n/a',
+    'Standards they set':allStd.length?allStd.join(' | '):'(none)',
+    'Their note':S.text['sm_note']||'(none)',
+    'Full summary':lines.join('\n')
+  };
+  fetch(WAVE_ENDPOINT,{method:'POST',headers:{'Content-Type':'application/json','Accept':'application/json'},body:JSON.stringify(payload)})
     .then(r=>{if(r.ok)document.getElementById('sentmsg').classList.add('show');}).catch(()=>{});
 }
 
