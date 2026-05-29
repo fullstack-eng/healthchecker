@@ -590,7 +590,7 @@ const Result = {
       h+='<div class="told"><div class="top"><span class="nm"><span class="dot" style="background:'+a.hex+'"></span>'+a.name+'</span><b style="color:'+a.hex+'">'+(a.score==null?"n/a":a.score)+'</b></div>'+rs+(S.ctx[sec.id]?'<div class="ctx">“'+esc(S.ctx[sec.id])+'”</div>':'')+'</div>';
     });
     if(S.text['sm_note'])h+='<div class="told"><div class="top"><span class="nm"><span class="dot" style="background:#5A6178"></span>In your words</span></div><div class="ctx" style="margin-top:0">“'+esc(S.text['sm_note'])+'”</div></div>';
-    h+='<div class="cta"><div class="t">Want to talk any of this through?<span>The Wave team can help you turn this into action.</span></div><a class="btn sm" href="mailto:'+WAVE_EMAIL+'?subject=Hiring Health Check · '+encodeURIComponent(S.meta.company)+'" style="text-decoration:none">Talk to Wave</a></div>';
+    h+='<div class="cta"><div class="t">Want to talk any of this through?<span>The Wave team can help you turn this into action.</span></div><a class="btn sm" href="https://waverecruitment.co.uk/book-a-call/" target="_blank" rel="noopener" style="text-decoration:none">Talk to Wave</a></div>';
     h+='<div class="docfoot"><span>Built from your own answers · a discussion document, not a verdict.</span><span></span></div></div>';
     document.getElementById('v-report').innerHTML=h;
   },
